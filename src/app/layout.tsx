@@ -24,10 +24,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr">
+    <html lang="fr" translate="yes">
+      <head>
+        {/* Meta tag pour Google Translate */}
+        <meta name="google" content="notranslate" />
+        <meta httpEquiv="content-language" content="fr" />
+      </head>
       <body>
         <SiteNav />
-        <main>{children}</main>
+        <main translate="yes">{children}</main>
         <SiteFooter />
       </body>
     </html>

@@ -7,6 +7,7 @@ import { DayStats } from "./DayStats";
 import { DayMap } from "./DayMap";
 import { DayGallery } from "./DayGallery";
 import { ProseContent } from "./ProseContent";
+import { PlaceCard } from "./PlaceCard";
 
 interface Props {
   day: SerializedDay;
@@ -16,13 +17,13 @@ interface Props {
 export function DayPage({ day: serializedDay, nav }: Props) {
   // Reconstruire l'entité Day côté client
   const day = useDay(serializedDay);
-  
+
   const isJour = day.isJour();
   const formattedDate = day.getFormattedDate();
   const title = day.getTitle();
 
   return (
-    <article className="livre-content animate-slide-up">
+    <article className="livre-content animate-slide-up" translate="yes">
       {/* En-tête */}
       <header className="day-header">
         {isJour && day.day && (
@@ -57,17 +58,31 @@ export function DayPage({ day: serializedDay, nav }: Props) {
         <div className="day-header__divider" />
       </header>
 
+      {/* Carte interactive */}
+      {day.hasMap() && <DayMap day={day} />}
+
       {/* Stats du jour */}
       {day.hasStats() && <DayStats stats={day.stats!} />}
 
-      {/* Carte interactive */}
-      {day.hasMap() && <DayMap day={day} />}
+      {/* Lieu de départ */}
+      {isJour && day.from && (
+        <div style={{ marginBottom: "1.5rem" }}>
+          <PlaceCard place={day.from} type="departure" />
+        </div>
+      )}
 
       {/* Texte */}
       <ProseContent content={day.content} />
 
       {/* Galerie */}
       {day.hasPhotos() && <DayGallery photos={day.photos} />}
+
+      {/* Lieu d'arrivée */}
+      {isJour && day.to && (
+        <div style={{ marginTop: "2.5rem", marginBottom: "2.5rem" }}>
+          <PlaceCard place={day.to} type="arrival" />
+        </div>
+      )}
 
       {/* Navigation */}
       <nav className="day-nav" aria-label="Navigation entre les journées">

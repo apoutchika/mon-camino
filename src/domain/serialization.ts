@@ -13,6 +13,7 @@ export interface SerializedPlace {
   city: string;
   name: string;
   link?: string;
+  stamp?: string; // Chemin vers l'image du tampon
 }
 
 export interface SerializedPhoto {
@@ -77,6 +78,7 @@ export function serializeDay(day: Day): SerializedDay {
           city: day.from.city,
           name: day.from.name,
           link: day.from.link,
+          stamp: day.from.stamp,
         }
       : null,
     to: day.to
@@ -87,6 +89,7 @@ export function serializeDay(day: Day): SerializedDay {
           city: day.to.city,
           name: day.to.name,
           link: day.to.link,
+          stamp: day.to.stamp,
         }
       : null,
     stats: day.stats
