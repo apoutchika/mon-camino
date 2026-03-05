@@ -170,9 +170,20 @@ export class Day {
 
   getAllGpxLatLngs(): [number, number][] {
     const points = this.gpx.map((p) => p.toLatLng());
+
+    if (
+      this.from?.latlng &&
+      this.to?.latlng &&
+      this.from?.latlng.equals(this.to?.latlng)
+    ) {
+      points.push(this.from?.latlng.toTuple());
+      return points;
+    }
+
     if (this.from?.latlng) {
       points.push(this.from?.latlng.toTuple());
     }
+
     if (this.to?.latlng) {
       points.push(this.to?.latlng.toTuple());
     }

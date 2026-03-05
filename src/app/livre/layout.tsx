@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { LivreSidebar } from '@/components/livre/LivreSidebar';
+import '../day-layout.css';
 
 export const metadata: Metadata = {
   title: 'Livre interactif',

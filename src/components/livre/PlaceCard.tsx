@@ -27,7 +27,7 @@ export function PlaceCard({ place, type }: Props) {
           background: "var(--sand)",
           display: "flex",
           gap: "1rem",
-          alignItems: "flex-start",
+          alignItems: "center",
         }}
       >
         {/* Tampon de crédential */}
@@ -39,7 +39,7 @@ export function PlaceCard({ place, type }: Props) {
               cursor: "pointer",
               flexShrink: 0,
               width: "80px",
-              height: "80px",
+              height: "100px",
               position: "relative",
               borderRadius: "8px",
               overflow: "hidden",
@@ -59,8 +59,8 @@ export function PlaceCard({ place, type }: Props) {
               src={place.stamp!}
               alt={`Tampon de crédential - ${place.name}`}
               fill
-              sizes="80px"
-              style={{ objectFit: "cover" }}
+              sizes="100px"
+              style={{ objectFit: "contain" }}
             />
           </button>
         )}

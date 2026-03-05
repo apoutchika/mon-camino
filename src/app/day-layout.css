@@ -1,0 +1,185 @@
+/* ============================================================
+   LAYOUT JOUR — Desktop 2 colonnes + Mobile optimisé
+   ============================================================ */
+
+/* ---- Layout 2 colonnes (desktop) ---- */
+.day-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: clamp(2rem, 5vw, 4rem) clamp(1.5rem, 3vw, 2rem);
+}
+
+@media (min-width: 1024px) {
+  .day-layout {
+    grid-template-columns: 1fr 380px;
+    gap: 3rem;
+    padding: clamp(2rem, 5vw, 4rem) clamp(2rem, 4vw, 4rem);
+  }
+}
+
+/* ---- Contenu principal ---- */
+.day-main {
+  min-width: 0; /* Fix pour grid overflow */
+  max-width: 720px;
+}
+
+@media (min-width: 1024px) {
+  .day-main {
+    max-width: none;
+  }
+}
+
+/* ---- Sidebar (desktop uniquement) ---- */
+.day-sidebar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .day-sidebar {
+    display: block;
+  }
+
+  .day-sidebar__sticky {
+    position: sticky;
+    top: calc(var(--nav-h) + 2rem);
+    max-height: calc(100vh - var(--nav-h) - 4rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    
+    /* Scrollbar personnalisée */
+    scrollbar-width: thin;
+    scrollbar-color: var(--warm) transparent;
+  }
+
+  .day-sidebar__sticky::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .day-sidebar__sticky::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .day-sidebar__sticky::-webkit-scrollbar-thumb {
+    background: var(--warm);
+    border-radius: 2px;
+  }
+
+  .day-sidebar__section {
+    margin-bottom: 1.5rem;
+  }
+
+  .day-sidebar__section:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Carte plus petite dans sidebar */
+  .day-sidebar .day-map-container {
+    height: 280px;
+  }
+}
+
+/* ---- Éléments mobiles uniquement ---- */
+.day-place-mobile,
+.day-stats-mobile {
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .day-place-mobile,
+  .day-stats-mobile {
+    display: none;
+  }
+}
+
+.day-place-arrival {
+  margin-top: 2.5rem;
+  margin-bottom: 2.5rem;
+}
+
+/* ---- Badge "De mémoire" ---- */
+.day-header__badge {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-family: var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 0.2rem 0.625rem;
+  margin-top: 0.5rem;
+}
+
+/* ---- Stats compactes (mobile) ---- */
+.day-stats-compact {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--sand);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  justify-content: space-around;
+}
+
+.day-stats-compact__item {
+  text-align: center;
+  flex: 1;
+}
+
+.day-stats-compact__value {
+  font-family: var(--font-serif);
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1;
+  display: block;
+  font-variant-numeric: lining-nums tabular-nums;
+  margin-bottom: 0.25rem;
+}
+
+.day-stats-compact__label {
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: block;
+  font-family: var(--font-sans);
+}
+
+/* ---- Optimisations mobile ---- */
+@media (max-width: 640px) {
+  .day-layout {
+    padding: 1.5rem 1rem;
+  }
+
+  .day-header {
+    margin-bottom: 2rem;
+  }
+
+  .day-header__title {
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+  }
+
+  .prose {
+    font-size: 1.0625rem;
+    line-height: 1.7;
+  }
+
+  .day-stats-compact {
+    gap: 0.75rem;
+    padding: 0.875rem;
+  }
+
+  .day-stats-compact__value {
+    font-size: 1.25rem;
+  }
+
+  .day-place-arrival {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+}

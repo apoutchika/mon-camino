@@ -103,25 +103,45 @@ export function DayMap({ day }: Props) {
 
       map = L.map(mapRef.current!, {
         center,
-        zoom: 12,
+        zoom: 13, // Zoom légèrement plus proche pour voir les noms
         zoomControl: true,
         scrollWheelZoom: isTouchDevice(),
       });
 
+      L.tileLayer("https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png", {
+        maxZoom: 20,
+        minZoom: 0,
+        attribution:
+          '&copy; OpenStreetMap France | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+
+      /*
       L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+        "https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}{r}.jpg",
         {
-          attribution: '© <a href="https://carto.com">CARTO</a>',
-          subdomains: "abcd",
-          maxZoom: 19,
+          attribution:
+            '&copy; CNES, Distribution Airbus DS, © Airbus DS, © PlanetObserver (Contains Copernicus Data) | &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          // ext: 'jpg'
         },
-      ).addTo(map);
+      )
+      */
+
+      /*
+      // Fond de carte avec plus de labels (OpenStreetMap France)
+      L.tileLayer("https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png", {
+        attribution:
+          '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        subdomains: "abc",
+        maxZoom: 20,
+      }).addTo(map);
+      */
 
       // ── Marqueurs hébergements ─────────────────────────────────────────────
       const fromLatLng = day.from!.latlng!.toTuple();
       const toLatLng = day.to!.latlng!.toTuple();
 
-      L.marker(fromLatLng, {
+      // Marqueur départ avec label permanent
+      const fromMarker = L.marker(fromLatLng, {
         icon: buildRoundIcon(L, "A", "#5a7a5f"),
       })
         .addTo(map)
@@ -134,7 +154,8 @@ export function DayMap({ day }: Props) {
           ),
         );
 
-      L.marker(toLatLng, {
+      // Marqueur arrivée avec label permanent
+      const toMarker = L.marker(toLatLng, {
         icon: buildRoundIcon(L, "B", "#b5603a"),
       })
         .addTo(map)

@@ -15,7 +15,6 @@ interface Props {
 }
 
 export function DayPage({ day: serializedDay, nav }: Props) {
-  // Reconstruire l'entité Day côté client
   const day = useDay(serializedDay);
 
   const isJour = day.isJour();
@@ -23,88 +22,105 @@ export function DayPage({ day: serializedDay, nav }: Props) {
   const title = day.getTitle();
 
   return (
-    <article className="livre-content animate-slide-up" translate="yes">
-      {/* En-tête */}
-      <header className="day-header">
-        {isJour && day.day && (
-          <div className="day-header__eyebrow">Jour {day.day}</div>
+    <div className="day-layout" translate="yes">
+      {/* Contenu principal */}
+      <article className="day-main">
+        {/* En-tête */}
+        <header className="day-header">
+          {isJour && day.day && (
+            <div className="day-header__eyebrow">Jour {day.day}</div>
+          )}
+
+          <h1 className="day-header__title">{title}</h1>
+
+          {formattedDate && (
+            <div className="day-header__date">{formattedDate}</div>
+          )}
+
+          {day.fromMemory && (
+            <span className="day-header__badge">De mémoire</span>
+          )}
+
+          <div className="day-header__divider" />
+        </header>
+
+        {/* Lieu de départ (mobile uniquement) */}
+        {isJour && day.from && (
+          <div className="day-place-mobile">
+            <PlaceCard place={day.from} type="departure" />
+          </div>
         )}
 
-        <h1 className="day-header__title">{title}</h1>
-
-        {formattedDate && (
-          <div className="day-header__date">{formattedDate}</div>
+        {/* Stats compactes (mobile uniquement) */}
+        {day.hasStats() && (
+          <div className="day-stats-mobile">
+            <DayStats stats={day.stats!} compact />
+          </div>
         )}
 
-        {day.fromMemory && (
-          <span
-            style={{
-              display: "inline-block",
-              fontSize: "0.6875rem",
-              fontFamily: "var(--font-sans)",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "var(--muted)",
-              border: "1px solid var(--line)",
-              borderRadius: "100px",
-              padding: "0.2rem 0.625rem",
-              marginTop: "0.5rem",
-            }}
-          >
-            De mémoire
-          </span>
+        {/* Lieu de départ */}
+        {day.from && (
+          <div className="day-sidebar__section">
+            <PlaceCard place={day.from} type="departure" />
+          </div>
         )}
 
-        <div className="day-header__divider" />
-      </header>
+        {/* Texte principal */}
+        <ProseContent content={day.content} />
 
-      {/* Carte interactive */}
-      {day.hasMap() && <DayMap day={day} />}
+        {/* Galerie photos */}
+        {day.hasPhotos() && <DayGallery photos={day.photos} />}
 
-      {/* Stats du jour */}
-      {day.hasStats() && <DayStats stats={day.stats!} />}
+        {/* Lieu d'arrivée */}
+        {isJour && day.to && (
+          <div className="day-place-arrival">
+            <PlaceCard place={day.to} type="arrival" />
+          </div>
+        )}
 
-      {/* Lieu de départ */}
-      {isJour && day.from && (
-        <div style={{ marginBottom: "1.5rem" }}>
-          <PlaceCard place={day.from} type="departure" />
-        </div>
+        {/* Navigation */}
+        <nav className="day-nav" aria-label="Navigation entre les journées">
+          {nav.prev ? (
+            <Link href={`/livre/${nav.prev.slug}`} className="day-nav__link">
+              <span className="day-nav__direction">← Précédent</span>
+              <span className="day-nav__label">{nav.prev.label}</span>
+            </Link>
+          ) : (
+            <div />
+          )}
+
+          {nav.next && (
+            <Link
+              href={`/livre/${nav.next.slug}`}
+              className="day-nav__link day-nav__link--next"
+            >
+              <span className="day-nav__direction">Suivant →</span>
+              <span className="day-nav__label">{nav.next.label}</span>
+            </Link>
+          )}
+        </nav>
+      </article>
+
+      {/* Sidebar (desktop uniquement) */}
+      {isJour && (day.hasMap() || day.hasStats() || day.from) && (
+        <aside className="day-sidebar">
+          <div className="day-sidebar__sticky">
+            {/* Stats */}
+            {day.hasStats() && (
+              <div className="day-sidebar__section">
+                <DayStats stats={day.stats!} />
+              </div>
+            )}
+
+            {/* Carte et dénivelé */}
+            {day.hasMap() && (
+              <div className="day-sidebar__section">
+                <DayMap day={day} />
+              </div>
+            )}
+          </div>
+        </aside>
       )}
-
-      {/* Texte */}
-      <ProseContent content={day.content} />
-
-      {/* Galerie */}
-      {day.hasPhotos() && <DayGallery photos={day.photos} />}
-
-      {/* Lieu d'arrivée */}
-      {isJour && day.to && (
-        <div style={{ marginTop: "2.5rem", marginBottom: "2.5rem" }}>
-          <PlaceCard place={day.to} type="arrival" />
-        </div>
-      )}
-
-      {/* Navigation */}
-      <nav className="day-nav" aria-label="Navigation entre les journées">
-        {nav.prev ? (
-          <Link href={`/livre/${nav.prev.slug}`} className="day-nav__link">
-            <span className="day-nav__direction">← Précédent</span>
-            <span className="day-nav__label">{nav.prev.label}</span>
-          </Link>
-        ) : (
-          <div />
-        )}
-
-        {nav.next && (
-          <Link
-            href={`/livre/${nav.next.slug}`}
-            className="day-nav__link day-nav__link--next"
-          >
-            <span className="day-nav__direction">Suivant →</span>
-            <span className="day-nav__label">{nav.next.label}</span>
-          </Link>
-        )}
-      </nav>
-    </article>
+    </div>
   );
 }
