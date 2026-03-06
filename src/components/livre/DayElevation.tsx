@@ -8,13 +8,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import type { TooltipProps } from "recharts";
 import { emitter } from "@/lib/events";
 import type { GpxPoint } from "@/domain";
 import { getElevationProfile } from "@/lib/gpx";
 import { formatNumber } from "@/lib/formatNumber";
 
 interface DataPoint {
+  id: string;
   distance: number;
   elevation: number;
   lat: number;
@@ -35,7 +35,7 @@ function kmTicks(data: DataPoint[]): number[] {
 }
 
 // Tooltip personnalisé
-function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
+function CustomTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload as DataPoint;
   return (
@@ -72,6 +72,13 @@ export function DayElevation({ points }: Props) {
       (i / Math.max(profile.length - 1, 1)) * (points.length - 1),
     );
     return {
+      id: [
+        p.distance,
+        p.elevation,
+        points[srcIdx]?.lat ?? 0,
+        points[srcIdx]?.lng ?? 0,
+        srcIdx,
+      ].join("#"),
       distance: p.distance,
       elevation: p.elevation,
       lat: points[srcIdx]?.lat ?? 0,

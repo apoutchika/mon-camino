@@ -1,6 +1,5 @@
 // Serialization layer for Next.js Server/Client Components
 import type { Day } from "./entities/Day";
-import type { Journey } from "./aggregates/Journey";
 
 // Types sérialisables (plain objects)
 export interface SerializedLatLng {
@@ -17,11 +16,14 @@ export interface SerializedPlace {
 }
 
 export interface SerializedPhoto {
+  type?: "photo" | "video";
   src: string;
   alt: string;
   caption?: string;
   width?: number;
   height?: number;
+  poster?: string; // Pour vidéos
+  duration?: number; // Pour vidéos
 }
 
 export interface SerializedDayStats {
@@ -110,11 +112,14 @@ export function serializeDay(day: Day): SerializedDay {
     })),
     content: day.content,
     photos: day.photos.map((p) => ({
+      type: p.type,
       src: p.src,
       alt: p.alt,
       caption: p.caption,
       width: p.width,
       height: p.height,
+      poster: p.poster,
+      duration: p.duration,
     })),
     fromMemory: day.fromMemory,
   };

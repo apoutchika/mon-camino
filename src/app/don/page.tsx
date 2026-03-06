@@ -1,22 +1,9 @@
 "use client";
 
-import {
-  TokenBTC,
-  TokenETH,
-  TokenUSDC,
-  TokenSOL,
-  TokenIconProps,
-} from "@web3icons/react";
+import { TokenBTC, TokenETH, TokenUSDC, TokenSOL } from "@web3icons/react";
 import { useState } from "react";
 
 const AMOUNTS = [5, 10, 15, 20, 30, 50];
-
-const CRYPTO_ICONS: Record<string, React.ComponentType<TokenIconProps>> = {
-  btc: TokenBTC,
-  eth: TokenETH,
-  "usdc-polygon": TokenUSDC,
-  sol: TokenSOL,
-};
 
 const CRYPTO_WALLETS = [
   {
@@ -25,8 +12,8 @@ const CRYPTO_WALLETS = [
     symbol: "BTC",
     address: "bc1q42q8qutaehalx94gc5qw67plgvs2jzvd62qxhj",
     color: "#f7931a",
-    icon: "₿",
     network: "Bitcoin",
+    Icon: TokenBTC,
   },
   {
     id: "eth",
@@ -34,29 +21,33 @@ const CRYPTO_WALLETS = [
     symbol: "ETH",
     address: "0x92687Ce71E7412Dd57705Db34A9b69b93a4b63b0",
     color: "#627eea",
-    icon: "Ξ",
     network: "Ethereum (Mainnet)",
+    Icon: TokenETH,
   },
+  /*
   {
     id: "usdc-polygon",
-    name: "USDC (Polygon)", // Précise le réseau dès le nom
+    name: "USDC",
     symbol: "USDC",
     address: "0x92687Ce71E7412Dd57705Db34A9b69b93a4b63b0",
     color: "#2775ca",
-    icon: "S", // L'icône du dollar est plus parlante pour l'USDC
-    network: "Polygon POS", // Très important à afficher
-    // tip: "Frais quasi nuls : privilégiez ce réseau !", // Un petit plus pour guider
+    network: "Polygon POS",
+    tip: "Frais quasi nuls : privilégiez ce réseau !",
+    Icon: TokenUSDC,
   },
   {
     id: "sol",
     name: "Solana",
-    symbol: "SOL / USDC", // Solana permet aussi l'USDC sur la même adresse !
+    symbol: "SOL / USDC",
     address: "BvjFLWtiC6MHwz2ooPjdZtbXjQxFapF7sZHEFgjX3Nsf",
     color: "#9945ff",
-    icon: "◉",
     network: "Solana",
+    Icon: TokenSOL,
   },
-];
+  */
+] as const;
+
+type Wallet = (typeof CRYPTO_WALLETS)[number];
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -105,11 +96,13 @@ function Divider({ label }: { label: string }) {
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
+
   const copy = async () => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
   return (
     <button
       onClick={copy}
@@ -132,39 +125,8 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-function CryptoCard({ wallet }: { wallet: (typeof CRYPTO_WALLETS)[0] }) {
-  const renderIcon = () => {
-    switch (wallet.id) {
-      case "btc":
-        return <TokenBTC size={28} variant="branded" />;
-      case "eth":
-        return <TokenETH size={28} variant="branded" />;
-      case "usdc-polygon":
-        return <TokenUSDC size={28} variant="branded" />;
-      case "sol":
-        return <TokenSOL size={28} variant="branded" />;
-      default:
-        return (
-          <span
-            style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "50%",
-              background: wallet.color,
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "0.875rem",
-              fontWeight: "600",
-              flexShrink: 0,
-            }}
-          >
-            {wallet.icon}
-          </span>
-        );
-    }
-  };
+function CryptoCard({ wallet }: { wallet: Wallet }) {
+  const { Icon } = wallet;
 
   return (
     <div
@@ -184,22 +146,23 @@ function CryptoCard({ wallet }: { wallet: (typeof CRYPTO_WALLETS)[0] }) {
           marginBottom: "0.75rem",
         }}
       >
-        {renderIcon()}
+        <div style={{ flexShrink: 0 }}>
+          <Icon size={28} variant="branded" />
+        </div>
 
-        <div>
-          <span
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
             style={{
               fontFamily: "var(--font-serif)",
               fontWeight: "600",
               fontSize: "0.9375rem",
               color: "var(--ink)",
-              display: "block",
               lineHeight: 1.2,
             }}
           >
             {wallet.name}
-          </span>
-          <span
+          </div>
+          <div
             style={{
               fontSize: "0.6875rem",
               color: "var(--muted)",
@@ -208,12 +171,11 @@ function CryptoCard({ wallet }: { wallet: (typeof CRYPTO_WALLETS)[0] }) {
             }}
           >
             {wallet.network}
-          </span>
+          </div>
         </div>
 
-        <span
+        <div
           style={{
-            marginLeft: "auto",
             fontSize: "0.6875rem",
             letterSpacing: "0.08em",
             color: "var(--muted)",
@@ -222,7 +184,7 @@ function CryptoCard({ wallet }: { wallet: (typeof CRYPTO_WALLETS)[0] }) {
           }}
         >
           {wallet.symbol}
-        </span>
+        </div>
       </div>
 
       {/* Tip */}
@@ -292,18 +254,6 @@ export default function DonPage() {
 
   const finalAmount = custom ? parseInt(custom, 10) : selected;
 
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "0.875rem 2.5rem 0.875rem 1rem",
-    border: "1.5px solid var(--line)",
-    borderRadius: "8px",
-    fontSize: "1rem",
-    fontFamily: "var(--font-serif)",
-    background: "var(--sand)",
-    color: "var(--ink)",
-    outline: "none",
-  };
-
   return (
     <div className="simple-page">
       <div className="simple-page__inner" style={{ maxWidth: "520px" }}>
@@ -326,7 +276,7 @@ export default function DonPage() {
             border: "1px solid var(--line)",
           }}
         >
-          {(["fiat", "crypto"] as Tab[]).map((t) => (
+          {(["fiat", "crypto"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -344,13 +294,14 @@ export default function DonPage() {
                 transition: "all 0.15s",
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
               }}
             >
               {t === "fiat" ? (
                 "💳 Carte / virement"
               ) : (
                 <>
-                  <TokenBTC /> Cryptomonnaie
+                  <TokenBTC variant="branded" /> Cryptomonnaie
                 </>
               )}
             </button>
@@ -389,7 +340,17 @@ export default function DonPage() {
                     setSelected(null);
                   }}
                   placeholder="Votre montant"
-                  style={inputStyle}
+                  style={{
+                    width: "100%",
+                    padding: "0.875rem 2.5rem 0.875rem 1rem",
+                    border: "1.5px solid var(--line)",
+                    borderRadius: "8px",
+                    fontSize: "1rem",
+                    fontFamily: "var(--font-serif)",
+                    background: "var(--sand)",
+                    color: "var(--ink)",
+                    outline: "none",
+                  }}
                 />
                 <span
                   style={{

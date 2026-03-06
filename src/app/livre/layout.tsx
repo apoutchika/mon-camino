@@ -1,16 +1,20 @@
-import type { Metadata } from 'next';
+'use client';
+
+import { useState } from 'react';
 import { LivreSidebar } from '@/components/livre/LivreSidebar';
+import { MobileWarning } from '@/components/livre/MobileWarning';
 import '../day-layout.css';
 
-export const metadata: Metadata = {
-  title: 'Livre interactif',
-};
-
 export default function LivreLayout({ children }: { children: React.ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
-    <div className="page-grid">
-      <LivreSidebar />
-      <div>{children}</div>
-    </div>
+    <>
+      <MobileWarning />
+      <div className={`page-grid ${!sidebarOpen ? 'page-grid--sidebar-closed' : ''}`}>
+        <LivreSidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+        <div>{children}</div>
+      </div>
+    </>
   );
 }

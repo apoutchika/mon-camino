@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Day, GpxPoint } from "@/domain";
 import { emitter } from "@/lib/events";
 import { DayElevation } from "./DayElevation";
+import "leaflet/dist/leaflet.css";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -80,7 +81,6 @@ export function DayMap({ day }: Props) {
 
     async function init() {
       const L = (await import("leaflet")).default;
-      await import("leaflet/dist/leaflet.css");
 
       // Fix icônes Next.js
       delete (L.Icon.Default.prototype as any)._getIconUrl;

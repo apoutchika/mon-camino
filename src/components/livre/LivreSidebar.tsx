@@ -4,66 +4,83 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getJourney } from "@/data/journey";
 
-export function LivreSidebar() {
+interface Props {
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+export function LivreSidebar({ isOpen, onToggle }: Props) {
   const pathname = usePathname();
   const journey = getJourney();
   const days = journey.getAllDays();
 
   return (
-    <aside className="livre-sidebar">
-      <div className="livre-sidebar__title">Table des matières</div>
+    <>
+      {/* Bouton toggle (desktop uniquement) */}
+      <button
+        onClick={onToggle}
+        className="livre-sidebar__toggle"
+        aria-label={isOpen ? "Masquer la navigation" : "Afficher la navigation"}
+        title={isOpen ? "Masquer la navigation" : "Afficher la navigation"}
+      >
+        {isOpen ? '‹' : '›'}
+      </button>
 
-      {days.map((day) => {
-        const slug = day.getSlug();
-        const href = `/livre/${slug}`;
-        const isActive = pathname === href;
-        const isSpecial = !day.isJour();
+      <aside className={`livre-sidebar ${!isOpen ? 'livre-sidebar--closed' : ''}`}>
+        <div className="livre-sidebar__title">Table des matières</div>
 
-        let label: string;
-        if (day.isAvantPropos()) {
-          label = day.title ?? "Avant-propos";
-        } else if (day.isPostface()) {
-          label = day.title ?? "Postface";
-        } else {
-          label = `Jour ${day.day}`;
-        }
+        {days.map((day) => {
+          const slug = day.getSlug();
+          const href = `/livre/${slug}`;
+          const isActive = pathname === href;
+          const isSpecial = !day.isJour();
 
-        let city = "";
-        if (day.isJour() && day.from && day.to) {
-          city = day.from.city === day.to.city 
-            ? day.from.city 
-            : `${day.from.city} → ${day.to.city}`;
-        }
+          let label: string;
+          if (day.isAvantPropos()) {
+            label = day.title ?? "Avant-propos";
+          } else if (day.isPostface()) {
+            label = day.title ?? "Postface";
+          } else {
+            label = `Jour ${day.day}`;
+          }
 
-        return (
-          <Link
-            key={day.id}
-            href={href}
-            className={[
-              "livre-sidebar__item",
-              isActive && "livre-sidebar__item--active",
-              isSpecial && "livre-sidebar__item--special",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-            title={isSpecial ? label : day.getLabel()}
-          >
-            {label}
-            {day.isJour() && city && (
-              <span
-                style={{
-                  display: "block",
-                  fontSize: "0.6875rem",
-                  color: "var(--muted)",
-                  marginTop: "1px",
-                }}
-              >
-                {city}
-              </span>
-            )}
-          </Link>
-        );
-      })}
-    </aside>
+          let city = "";
+          if (day.isJour() && day.from && day.to) {
+            city = day.from.city === day.to.city 
+              ? day.from.city 
+              : `${day.from.city} → ${day.to.city}`;
+          }
+
+          return (
+            <Link
+              key={day.id}
+              href={href}
+              className={[
+                "livre-sidebar__item",
+                isActive && "livre-sidebar__item--active",
+                isSpecial && "livre-sidebar__item--special",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              title={isSpecial ? label : day.getLabel()}
+            >
+              {label}
+              {day.isJour() && city && (
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: "0.6875rem",
+                    color: "var(--muted)",
+                    marginTop: "1px",
+                  }}
+                >
+                  {city}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </aside>
+    </>
   );
 }

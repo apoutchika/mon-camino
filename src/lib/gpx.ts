@@ -1,4 +1,4 @@
-import type { GpxPoint } from '@/domain';
+import { GpxPoint } from "@/domain";
 
 // ============================================================
 // GPX PARSER
@@ -10,28 +10,28 @@ export function parseGpx(gpxString: string): GpxPoint[] {
 
   try {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(gpxString, 'application/xml');
-    const trkpts = doc.querySelectorAll('trkpt');
+    const doc = parser.parseFromString(gpxString, "application/xml");
+    const trkpts = doc.querySelectorAll("trkpt");
 
-    return Array.from(trkpts).map((pt, idx) => 
+    return Array.from(trkpts).map((pt, idx) =>
       GpxPoint.create(
         `gpx-${idx}`,
-        parseFloat(pt.getAttribute('lat') ?? '0'),
-        parseFloat(pt.getAttribute('lon') ?? '0'),
-        pt.querySelector('ele')
-          ? parseFloat(pt.querySelector('ele')!.textContent ?? '0')
-          : 0
-      )
+        parseFloat(pt.getAttribute("lat") ?? "0"),
+        parseFloat(pt.getAttribute("lon") ?? "0"),
+        pt.querySelector("ele")
+          ? parseFloat(pt.querySelector("ele")!.textContent ?? "0")
+          : 0,
+      ),
     );
   } catch {
-    console.error('GPX parsing error');
+    console.error("GPX parsing error");
     return [];
   }
 }
 
 // Calcul du profil altimétrique sous forme de tableau [distance_km, altitude]
 export function getElevationProfile(
-  points: GpxPoint[]
+  points: GpxPoint[],
 ): { distance: number; elevation: number }[] {
   if (!points.length) return [];
 
@@ -66,12 +66,21 @@ export function computeElevationStats(points: GpxPoint[]) {
     if (diff > 0) dPlus += diff;
     else dMinus += Math.abs(diff);
   }
-  return { elevationGain: Math.round(dPlus), elevationLoss: Math.round(dMinus) };
+  return {
+    elevationGain: Math.round(dPlus),
+    elevationLoss: Math.round(dMinus),
+  };
 }
 
 // Interpolation de points pour une animation fluide (réduit ou augmente le nb de points)
-export function samplePoints(points: GpxPoint[], targetCount: number): GpxPoint[] {
+export function samplePoints(
+  points: GpxPoint[],
+  targetCount: number,
+): GpxPoint[] {
   if (points.length <= targetCount) return points;
   const step = (points.length - 1) / (targetCount - 1);
-  return Array.from({ length: targetCount }, (_, i) => points[Math.round(i * step)]);
+  return Array.from(
+    { length: targetCount },
+    (_, i) => points[Math.round(i * step)],
+  );
 }

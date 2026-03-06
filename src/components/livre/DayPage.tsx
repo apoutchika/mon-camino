@@ -68,15 +68,15 @@ export function DayPage({ day: serializedDay, nav }: Props) {
         {/* Texte principal */}
         <ProseContent content={day.content} />
 
-        {/* Galerie photos */}
-        {day.hasPhotos() && <DayGallery photos={day.photos} />}
-
         {/* Lieu d'arrivée */}
         {isJour && day.to && (
           <div className="day-place-arrival">
             <PlaceCard place={day.to} type="arrival" />
           </div>
         )}
+
+        {/* Galerie photos */}
+        {day.hasPhotos() && <DayGallery photos={day.photos} />}
 
         {/* Navigation */}
         <nav className="day-nav" aria-label="Navigation entre les journées">
