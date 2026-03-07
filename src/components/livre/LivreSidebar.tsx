@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getJourney } from "@/data/journey";
+import { useEffect } from "react";
 
 interface Props {
   isOpen: boolean;
@@ -14,19 +15,107 @@ export function LivreSidebar({ isOpen, onToggle }: Props) {
   const journey = getJourney();
   const days = journey.getAllDays();
 
+  // Fermer la sidebar au changement de route
+  useEffect(() => {
+    if (isOpen && window.innerWidth < 1500) {
+      onToggle();
+    }
+  }, [pathname]);
+
+  // Empêcher le scroll du body quand la sidebar est ouverte sur mobile
+  useEffect(() => {
+    if (isOpen && window.innerWidth < 1500) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   return (
     <>
-      {/* Bouton toggle (desktop uniquement) */}
+      {/* Bouton toggle avec SVG vague organique */}
       <button
         onClick={onToggle}
-        className="livre-sidebar__toggle"
-        aria-label={isOpen ? "Masquer la navigation" : "Afficher la navigation"}
-        title={isOpen ? "Masquer la navigation" : "Afficher la navigation"}
+        className={`livre-sidebar__toggle ${isOpen ? 'livre-sidebar__toggle--open' : ''}`}
+        aria-label={isOpen ? "Fermer le menu" : "Ouvrir le menu"}
+        title={isOpen ? "Fermer le menu" : "Ouvrir le menu"}
       >
-        {isOpen ? '‹' : '›'}
+        <svg 
+          width="60" 
+          height="180" 
+          viewBox="0 0 60 180" 
+          fill="none" 
+          xmlns="http://www.w3.org/2000/svg"
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: '100%',
+            height: '100%',
+          }}
+        >
+          <defs>
+            <filter id="shadow" x="0" y="0" width="70" height="190" filterUnits="userSpaceOnUse">
+              <feGaussianBlur stdDeviation="3" in="SourceAlpha"/>
+              <feOffset dx="2" dy="0"/>
+              <feComponentTransfer>
+                <feFuncA type="linear" slope="0.15"/>
+              </feComponentTransfer>
+              <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="50%">
+              <stop offset="0%" stopColor="#c8b89a" />
+              <stop offset="100%" stopColor="#b5603a" />
+            </linearGradient>
+          </defs>
+          <g filter="url(#shadow)">
+            <path 
+              d="M 0,0 C 0,45 55,45 55,90 C 55,135 0,135 0,180 L 0,0 Z" 
+              fill="url(#waveGradient)" 
+            />
+          </g>
+          {/* Flèche stylée qui change de sens */}
+          <g
+            style={{
+              transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              transformOrigin: '30px 90px',
+              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          >
+            {/* Cercle d'arrière-plan discret */}
+            <circle
+              cx="30"
+              cy="90"
+              r="14"
+              fill="#2b2318"
+              opacity="0.1"
+            />
+            {/* Flèche pointant vers la droite (→) quand fermé */}
+            <path
+              d="M 36 90 L 24 84 L 24 96 Z"
+              fill="#2b2318"
+              opacity="0.6"
+            />
+          </g>
+        </svg>
       </button>
 
-      <aside className={`livre-sidebar ${!isOpen ? 'livre-sidebar--closed' : ''}`}>
+      {/* Overlay sombre (< 1500px uniquement) */}
+      <div
+        className={`livre-sidebar-overlay ${isOpen ? "livre-sidebar-overlay--visible" : ""}`}
+        onClick={onToggle}
+        aria-hidden="true"
+      />
+
+      <aside
+        className={`livre-sidebar ${isOpen ? "livre-sidebar--open" : ""}`}
+      >
         <div className="livre-sidebar__title">Table des matières</div>
 
         {days.map((day) => {
@@ -45,10 +134,8 @@ export function LivreSidebar({ isOpen, onToggle }: Props) {
           }
 
           let city = "";
-          if (day.isJour() && day.from && day.to) {
-            city = day.from.city === day.to.city 
-              ? day.from.city 
-              : `${day.from.city} → ${day.to.city}`;
+          if (day.isJour() && (day.from || day.to)) {
+            city = day.getFromTo();
           }
 
           return (

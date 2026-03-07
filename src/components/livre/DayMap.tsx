@@ -103,16 +103,15 @@ export function DayMap({ day }: Props) {
 
       map = L.map(mapRef.current!, {
         center,
-        zoom: 13, // Zoom légèrement plus proche pour voir les noms
+        zoom: 11, // Zoom optimal pour voir les villes sans trop de détails
         zoomControl: true,
         scrollWheelZoom: isTouchDevice(),
       });
 
+      // OpenStreetMap France : meilleur compromis pour les noms de villes
       L.tileLayer("https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png", {
         maxZoom: 20,
-        minZoom: 0,
-        attribution:
-          '&copy; OpenStreetMap France | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        attribution: '© <a href="https://osm.org/copyright">OpenStreetMap</a>',
       }).addTo(map);
 
       /*
@@ -140,28 +139,36 @@ export function DayMap({ day }: Props) {
       const fromLatLng = day.from!.latlng!.toTuple();
       const toLatLng = day.to!.latlng!.toTuple();
 
+      const letters = ["B", "A"];
+
       // Marqueur départ avec label permanent
-      const fromMarker = L.marker(fromLatLng, {
-        icon: buildRoundIcon(L, "A", "#5a7a5f"),
-      })
-        .addTo(map)
-        .bindPopup(
-          buildPopupHtml(
-            day.from!.name,
-            day.from!.city,
-            day.from!.link,
-            "#5a7a5f",
-          ),
-        );
+      if (fromLatLng) {
+        L.marker(fromLatLng, {
+          icon: buildRoundIcon(L, letters.pop()!, "#5a7a5f"),
+        })
+          .addTo(map)
+          .bindPopup(
+            buildPopupHtml(
+              day.from!.name,
+              day.from!.city,
+              day.from!.link,
+              "#5a7a5f",
+            ),
+          );
+      }
+
+      const isSame = day.to?.latlng && day.from?.latlng?.equals(day.to.latlng);
 
       // Marqueur arrivée avec label permanent
-      const toMarker = L.marker(toLatLng, {
-        icon: buildRoundIcon(L, "B", "#b5603a"),
-      })
-        .addTo(map)
-        .bindPopup(
-          buildPopupHtml(day.to!.name, day.to!.city, day.to!.link, "#b5603a"),
-        );
+      if (toLatLng && !isSame) {
+        L.marker(toLatLng, {
+          icon: buildRoundIcon(L, letters.pop()!, "#b5603a"),
+        })
+          .addTo(map)
+          .bindPopup(
+            buildPopupHtml(day.to!.name, day.to!.city, day.to!.link, "#b5603a"),
+          );
+      }
 
       // ── GPX ───────────────────────────────────────────────────────────────
       setGpxPoints(day.gpx);

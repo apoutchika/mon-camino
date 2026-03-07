@@ -3,11 +3,15 @@
 import type { SerializedDay, PageNavigation } from "@/domain";
 import { useDay } from "@/domain";
 import Link from "next/link";
-import { DayStats } from "./DayStats";
-import { DayMap } from "./DayMap";
+import { useState, useEffect } from "react";
 import { DayGallery } from "./DayGallery";
 import { ProseContent } from "./ProseContent";
 import { PlaceCard } from "./PlaceCard";
+import { EndOfBookCTA } from "./EndOfBookCTA";
+import { DayLike } from "./DayLike";
+import { DayStatsBlock } from "./DayStatsBlock";
+import { StatsToggle } from "./StatsToggle";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 interface Props {
   day: SerializedDay;
@@ -16,10 +20,33 @@ interface Props {
 
 export function DayPage({ day: serializedDay, nav }: Props) {
   const day = useDay(serializedDay);
+  
+  // Détecter la taille d'écran
+  const isDesktop = useMediaQuery("(min-width: 1200px)");
+  
+  // État pour afficher/masquer les stats (uniquement < 1200px)
+  const [statsVisible, setStatsVisible] = useState(false);
+  
+  // Charger la préférence depuis localStorage au montage
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !isDesktop) {
+      const saved = localStorage.getItem('statsVisible');
+      setStatsVisible(saved === 'true');
+    }
+  }, [isDesktop]);
+  
+  // Sauvegarder la préférence dans localStorage
+  const handleToggleStats = (visible: boolean) => {
+    setStatsVisible(visible);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('statsVisible', String(visible));
+    }
+  };
 
   const isJour = day.isJour();
   const formattedDate = day.getFormattedDate();
   const title = day.getTitle();
+  const hasStatsOrMap = day.hasStats() || day.hasMap();
 
   return (
     <div className="day-layout" translate="yes">
@@ -44,23 +71,54 @@ export function DayPage({ day: serializedDay, nav }: Props) {
           <div className="day-header__divider" />
         </header>
 
-        {/* Lieu de départ (mobile uniquement) */}
-        {isJour && day.from && (
-          <div className="day-place-mobile">
-            <PlaceCard place={day.from} type="departure" />
+        {/* Bouton like (jours uniquement) */}
+        {isJour && day.day && (
+          <div className="day-like-wrapper">
+            <DayLike dayId={day.day} />
           </div>
         )}
 
-        {/* Stats compactes (mobile uniquement) */}
-        {day.hasStats() && (
+        {/* Stats compactes mobile (< 768px) */}
+        {isJour && day.hasStats() && (
           <div className="day-stats-mobile">
-            <DayStats stats={day.stats!} compact />
+            <div className="day-stats-compact">
+              <div className="day-stats-compact__item">
+                <span className="day-stats-compact__value">
+                  {day.stats!.distance.toFixed(1)}
+                </span>
+                <span className="day-stats-compact__label">km</span>
+              </div>
+              <div className="day-stats-compact__item">
+                <span className="day-stats-compact__value">
+                  {Math.round(day.stats!.elevationGain)}
+                </span>
+                <span className="day-stats-compact__label">D+</span>
+              </div>
+              <div className="day-stats-compact__item">
+                <span className="day-stats-compact__value">
+                  {Math.round(day.stats!.elevationLoss)}
+                </span>
+                <span className="day-stats-compact__label">D-</span>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Lieu de départ */}
-        {day.from && (
-          <div className="day-sidebar__section">
+        {/* Stats complètes tablette/mobile (768px - 1199px) */}
+        {!isDesktop && isJour && hasStatsOrMap && (
+          <div className="day-tablet-stats">
+            <StatsToggle
+              visible={statsVisible}
+              onToggle={handleToggleStats}
+            />
+            
+            {statsVisible && <DayStatsBlock day={day} />}
+          </div>
+        )}
+
+        {/* Lieu de départ (avant le texte) */}
+        {isJour && day.from && (
+          <div style={{ marginBottom: '2rem' }}>
             <PlaceCard place={day.from} type="departure" />
           </div>
         )}
@@ -68,7 +126,7 @@ export function DayPage({ day: serializedDay, nav }: Props) {
         {/* Texte principal */}
         <ProseContent content={day.content} />
 
-        {/* Lieu d'arrivée */}
+        {/* Lieu d'arrivée (après le texte) */}
         {isJour && day.to && (
           <div className="day-place-arrival">
             <PlaceCard place={day.to} type="arrival" />
@@ -77,6 +135,9 @@ export function DayPage({ day: serializedDay, nav }: Props) {
 
         {/* Galerie photos */}
         {day.hasPhotos() && <DayGallery photos={day.photos} />}
+
+        {/* CTA fin de livre (postface uniquement) */}
+        {day.isPostface() && <EndOfBookCTA />}
 
         {/* Navigation */}
         <nav className="day-nav" aria-label="Navigation entre les journées">
@@ -101,23 +162,11 @@ export function DayPage({ day: serializedDay, nav }: Props) {
         </nav>
       </article>
 
-      {/* Sidebar (desktop uniquement) */}
-      {isJour && (day.hasMap() || day.hasStats() || day.from) && (
+      {/* === SIDEBAR DESKTOP (≥ 1200px) === */}
+      {isDesktop && isJour && hasStatsOrMap && (
         <aside className="day-sidebar">
           <div className="day-sidebar__sticky">
-            {/* Stats */}
-            {day.hasStats() && (
-              <div className="day-sidebar__section">
-                <DayStats stats={day.stats!} />
-              </div>
-            )}
-
-            {/* Carte et dénivelé */}
-            {day.hasMap() && (
-              <div className="day-sidebar__section">
-                <DayMap day={day} />
-              </div>
-            )}
+            <DayStatsBlock day={day} />
           </div>
         </aside>
       )}

@@ -1,12 +1,35 @@
-import type { Metadata } from 'next';
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-export const metadata: Metadata = {
-  title: 'Télécharger',
-  description: 'Téléchargez gratuitement le récit en ePub ou PDF.',
-};
-
 export default function TelechargementPage() {
+  const [stats, setStats] = useState<{ total: number; epub: number; pdf: number } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/stats')
+      .then(res => res.json())
+      .then(data => setStats(data))
+      .catch(() => setStats(null));
+  }, []);
+
+  const handleDownload = async (format: 'epub' | 'pdf') => {
+    try {
+      const res = await fetch('/api/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ format }),
+      });
+      
+      const data = await res.json();
+      if (data.stats) {
+        setStats(data.stats); // Mettre à jour les stats immédiatement
+      }
+    } catch (error) {
+      console.error('Erreur compteur:', error);
+    }
+  };
+
   return (
     <div className="simple-page">
       <div className="simple-page__inner">
@@ -15,21 +38,61 @@ export default function TelechargementPage() {
           Le livre est entièrement gratuit. Choisissez le format qui convient à votre usage.
         </p>
 
+        {stats && (
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.5rem 1rem',
+              background: 'var(--sand)',
+              border: '1px solid var(--line)',
+              borderRadius: '100px',
+              fontSize: '0.8125rem',
+              color: 'var(--stone)',
+              marginBottom: '2rem',
+            }}
+          >
+            <span>📥</span>
+            <span>{stats.total} téléchargement{stats.total > 1 ? 's' : ''}</span>
+          </div>
+        )}
+
         <div className="download-options">
-          <a href="/downloads/pelerinage.epub" download className="download-card">
+          <a
+            href="/downloads/pelerinage.epub"
+            download
+            onClick={() => handleDownload('epub')}
+            className="download-card"
+          >
             <div className="download-card__info">
               <div className="download-card__format">ePub</div>
               <div className="download-card__desc">Pour liseuse, iPhone, Android</div>
+              {stats && stats.epub > 0 && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.25rem' }}>
+                  {stats.epub} téléchargement{stats.epub > 1 ? 's' : ''}
+                </div>
+              )}
             </div>
             <span className="btn btn-outline" style={{ pointerEvents: 'none' }}>
               ↓ Télécharger
             </span>
           </a>
 
-          <a href="/downloads/pelerinage.pdf" download className="download-card">
+          <a
+            href="/downloads/pelerinage.pdf"
+            download
+            onClick={() => handleDownload('pdf')}
+            className="download-card"
+          >
             <div className="download-card__info">
               <div className="download-card__format">PDF</div>
               <div className="download-card__desc">Mise en page soignée, pour écran ou impression</div>
+              {stats && stats.pdf > 0 && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.25rem' }}>
+                  {stats.pdf} téléchargement{stats.pdf > 1 ? 's' : ''}
+                </div>
+              )}
             </div>
             <span className="btn btn-outline" style={{ pointerEvents: 'none' }}>
               ↓ Télécharger

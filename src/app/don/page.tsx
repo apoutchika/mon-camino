@@ -259,8 +259,8 @@ export default function DonPage() {
       <div className="simple-page__inner" style={{ maxWidth: "520px" }}>
         <h1 className="simple-page__title">Soutenir l'auteur</h1>
         <p className="simple-page__subtitle">
-          Ce livre est et restera gratuit. Si le récit vous a touché, votre
-          soutien — même modeste — permet de continuer à écrire.
+          Ce livre en ligne restera toujours gratuit. Si le récit vous a touché,
+          votre soutien est une belle façon de dire merci pour le travail accompli.
         </p>
 
         {/* Tabs */}

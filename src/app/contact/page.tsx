@@ -1,14 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import ReCAPTCHA from "react-google-recaptcha";
+import { contactSchema, type ContactFormData } from "@/lib/contactSchema";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type Context = "don" | "lecture" | "autre";
 type Status = "idle" | "loading" | "success" | "error";
 
-// ─── Helpers UI ───────────────────────────────────────────────────────────────
+const SUBJECT_OPTIONS = [
+  "Question sur le récit",
+  "Remerciement après un don",
+  "Partage d'expérience",
+  "Suggestion ou remarque",
+  "Autre",
+] as const;
 
 function FieldLabel({
   htmlFor,
@@ -38,7 +45,9 @@ function FieldLabel({
 const fieldStyle: React.CSSProperties = {
   width: "100%",
   padding: "0.875rem 1rem",
-  border: "1.5px solid var(--line)",
+  borderWidth: "1.5px",
+  borderStyle: "solid",
+  borderColor: "var(--line)",
   borderRadius: "8px",
   fontSize: "0.9375rem",
   fontFamily: "var(--font-serif)",
@@ -49,49 +58,70 @@ const fieldStyle: React.CSSProperties = {
   display: "block",
 };
 
-// ─── Composant ────────────────────────────────────────────────────────────────
+const errorFieldStyle: React.CSSProperties = {
+  ...fieldStyle,
+  borderColor: "#fca5a5",
+  background: "#fef2f2",
+};
 
 export default function ContactPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [context, setContext] = useState<Context>("lecture");
-  const [message, setMessage] = useState("");
   const [status, setStatus] = useState<Status>("idle");
-  const [errors, setErrors] = useState<string[]>([]);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
+  const [showCustomSubject, setShowCustomSubject] = useState(false);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
-  const contexts: { value: Context; label: string }[] = [
-    { value: "lecture", label: "À propos du livre" },
-    { value: "don", label: "Suite à un don" },
-    { value: "autre", label: "Autre" },
-  ];
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<ContactFormData>({
+    resolver: yupResolver(contactSchema),
+  });
 
-  const handleSubmit = async () => {
+  const handleSubjectChange = (value: string) => {
+    setSelectedSubject(value);
+    if (value === "Autre") {
+      setShowCustomSubject(true);
+      setValue("subject", "");
+    } else {
+      setShowCustomSubject(false);
+      setValue("subject", value);
+    }
+  };
+
+  const onSubmit = async (data: ContactFormData) => {
     setStatus("loading");
-    setErrors([]);
+    setServerError(null);
 
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, context, message }),
+        body: JSON.stringify(data),
       });
 
-      const data = await res.json();
+      const result = await res.json();
 
       if (!res.ok) {
-        setErrors(data.errors ?? ["Une erreur est survenue."]);
+        setServerError(result.error || "Une erreur est survenue");
         setStatus("error");
+        recaptchaRef.current?.reset();
         return;
       }
 
       setStatus("success");
     } catch {
-      setErrors(["Impossible d'envoyer le message. Vérifiez votre connexion."]);
+      setServerError(
+        "Impossible d'envoyer le message. Vérifiez votre connexion.",
+      );
       setStatus("error");
+      recaptchaRef.current?.reset();
     }
   };
 
-  // ── Succès ──────────────────────────────────────────────────────────────────
+  // Succès
   if (status === "success") {
     return (
       <div className="simple-page">
@@ -131,7 +161,7 @@ export default function ContactPage() {
     );
   }
 
-  // ── Formulaire ──────────────────────────────────────────────────────────────
+  // Formulaire
   return (
     <div
       className="simple-page"
@@ -145,7 +175,6 @@ export default function ContactPage() {
           padding: "0 clamp(1rem, 4vw, 2rem)",
         }}
       >
-        {/* En-tête */}
         <h1
           className="simple-page__title"
           style={{ textAlign: "left", marginBottom: "0.5rem" }}
@@ -165,143 +194,201 @@ export default function ContactPage() {
           d'échanger — je lis chaque message avec plaisir.
         </p>
 
-        {/* Contexte */}
-        <div style={{ marginBottom: "1.5rem" }}>
-          <FieldLabel htmlFor="context">Objet du message</FieldLabel>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            {contexts.map((c) => (
-              <button
-                key={c.value}
-                onClick={() => setContext(c.value)}
-                style={{
-                  padding: "0.5rem 1rem",
-                  borderRadius: "100px",
-                  border: "1.5px solid",
-                  borderColor:
-                    context === c.value ? "var(--earth)" : "var(--line)",
-                  background:
-                    context === c.value ? "var(--earth)" : "transparent",
-                  color: context === c.value ? "var(--white)" : "var(--stone)",
-                  fontSize: "0.8125rem",
-                  fontFamily: "var(--font-sans)",
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                }}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <form
+          onSubmit={async (...data) => {
+            data[0].preventDefault();
+            const token = await recaptchaRef.current?.executeAsync();
+            console.log({ token });
+            setValue("recaptcha", token || "");
 
-        {/* Nom + Email côte à côte */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "1rem",
-            marginBottom: "1.5rem",
+            handleSubmit(onSubmit)(...data);
           }}
         >
-          <div>
-            <FieldLabel htmlFor="name">Votre nom</FieldLabel>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Marie Dupont"
-              style={fieldStyle}
-              autoComplete="name"
-            />
-          </div>
-          <div>
-            <FieldLabel htmlFor="email">Votre email</FieldLabel>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="marie@exemple.fr"
-              style={fieldStyle}
-              autoComplete="email"
-            />
-          </div>
-        </div>
-
-        {/* Message */}
-        <div style={{ marginBottom: "1.75rem" }}>
-          <FieldLabel htmlFor="message">Message</FieldLabel>
-          <textarea
-            id="message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Votre message…"
-            rows={6}
-            style={{
-              ...fieldStyle,
-              resize: "vertical",
-              lineHeight: "1.7",
-              minHeight: "140px",
-            }}
-          />
+          {/* Nom + Email */}
           <div
             style={{
-              textAlign: "right",
-              fontSize: "0.6875rem",
-              color: message.length > 20 ? "var(--muted)" : "transparent",
-              marginTop: "0.375rem",
-              transition: "color 0.2s",
-              fontFamily: "var(--font-sans)",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "1rem",
+              marginBottom: "1.5rem",
             }}
           >
-            {message.length} caractères
+            <div>
+              <FieldLabel htmlFor="name">Votre nom</FieldLabel>
+              <input
+                id="name"
+                type="text"
+                {...register("name")}
+                placeholder="Marie Dupont"
+                style={errors.name ? errorFieldStyle : fieldStyle}
+                autoComplete="name"
+              />
+              {errors.name && (
+                <p
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "#dc2626",
+                    marginTop: "0.375rem",
+                  }}
+                >
+                  {errors.name.message}
+                </p>
+              )}
+            </div>
+            <div>
+              <FieldLabel htmlFor="email">Votre email</FieldLabel>
+              <input
+                id="email"
+                type="email"
+                {...register("email")}
+                placeholder="marie@exemple.fr"
+                style={errors.email ? errorFieldStyle : fieldStyle}
+                autoComplete="email"
+              />
+              {errors.email && (
+                <p
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "#dc2626",
+                    marginTop: "0.375rem",
+                  }}
+                >
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Erreurs */}
-        {errors.length > 0 && (
-          <div
-            style={{
-              background: "#fef2f2",
-              border: "1px solid #fecaca",
-              borderRadius: "8px",
-              padding: "0.875rem 1rem",
-              marginBottom: "1.25rem",
-            }}
-          >
-            {errors.map((e, i) => (
+          {/* Sujet */}
+          <div style={{ marginBottom: "1.5rem" }}>
+            <FieldLabel htmlFor="subject-select">Sujet</FieldLabel>
+            <select
+              id="subject-select"
+              value={selectedSubject}
+              onChange={(e) => handleSubjectChange(e.target.value)}
+              style={{
+                ...fieldStyle,
+                cursor: "pointer",
+              }}
+            >
+              <option value="">Choisissez un sujet…</option>
+              {SUBJECT_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            
+            {showCustomSubject && (
+              <input
+                id="subject"
+                type="text"
+                {...register("subject")}
+                placeholder="Précisez votre sujet…"
+                style={{
+                  ...(errors.subject ? errorFieldStyle : fieldStyle),
+                  marginTop: "0.75rem",
+                }}
+              />
+            )}
+            
+            {errors.subject && (
               <p
-                key={i}
                 style={{
-                  fontSize: "0.875rem",
-                  color: "#b91c1c",
-                  margin: i > 0 ? "0.25rem 0 0" : "0",
+                  fontSize: "0.75rem",
+                  color: "#dc2626",
+                  marginTop: "0.375rem",
                 }}
               >
-                {e}
+                {errors.subject.message}
               </p>
-            ))}
+            )}
           </div>
-        )}
 
-        {/* Submit */}
-        <button
-          className="btn btn-primary"
-          onClick={handleSubmit}
-          disabled={status === "loading" || !name || !email || !message}
-          style={{
-            width: "100%",
-            justifyContent: "center",
-            fontSize: "1rem",
-            padding: "1rem",
-            opacity: status === "loading" ? 0.7 : 1,
-          }}
-        >
-          {status === "loading" ? "Envoi en cours…" : "Envoyer le message →"}
-        </button>
+          {/* Message */}
+          <div style={{ marginBottom: "1.5rem" }}>
+            <FieldLabel htmlFor="message">Message</FieldLabel>
+            <textarea
+              id="message"
+              {...register("message")}
+              placeholder="Votre message…"
+              rows={6}
+              style={{
+                ...(errors.message ? errorFieldStyle : fieldStyle),
+                resize: "vertical",
+                lineHeight: "1.7",
+                minHeight: "140px",
+              }}
+            />
+            {errors.message && (
+              <p
+                style={{
+                  fontSize: "0.75rem",
+                  color: "#dc2626",
+                  marginTop: "0.375rem",
+                }}
+              >
+                {errors.message.message}
+              </p>
+            )}
+          </div>
 
-        {/* Note vie privée */}
+          {/* reCAPTCHA */}
+          <div style={{ marginBottom: "1.5rem" }}>
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              size="invisible"
+              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""}
+              onChange={(token) => setValue("recaptcha", token || "")}
+              theme="light"
+            />
+            {errors.recaptcha && (
+              <p
+                style={{
+                  fontSize: "0.75rem",
+                  color: "#dc2626",
+                  marginTop: "0.375rem",
+                }}
+              >
+                {errors.recaptcha.message}
+              </p>
+            )}
+          </div>
+
+          {/* Erreur serveur */}
+          {serverError && (
+            <div
+              style={{
+                background: "#fef2f2",
+                border: "1px solid #fecaca",
+                borderRadius: "8px",
+                padding: "0.875rem 1rem",
+                marginBottom: "1.25rem",
+              }}
+            >
+              <p style={{ fontSize: "0.875rem", color: "#b91c1c", margin: 0 }}>
+                {serverError}
+              </p>
+            </div>
+          )}
+
+          {/* Submit */}
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={status === "loading"}
+            style={{
+              width: "100%",
+              justifyContent: "center",
+              fontSize: "1rem",
+              padding: "1rem",
+              opacity: status === "loading" ? 0.7 : 1,
+            }}
+          >
+            {status === "loading" ? "Envoi en cours…" : "Envoyer le message →"}
+          </button>
+        </form>
+
         <p
           style={{
             marginTop: "1.25rem",
@@ -315,7 +402,7 @@ export default function ContactPage() {
           vous répondre.
         </p>
 
-        {/* Lien email direct */}
+        {/* Email direct */}
         <div
           style={{
             marginTop: "2.5rem",
@@ -334,7 +421,7 @@ export default function ContactPage() {
             Vous préférez écrire directement ?
           </p>
           <a
-            href="mailto:contact@votredomaine.fr" // ← à adapter
+            href="mailto:contact@votredomaine.fr"
             className="link-underline"
             style={{
               fontSize: "0.9375rem",

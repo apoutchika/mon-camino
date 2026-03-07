@@ -12,13 +12,16 @@ export default function HomePage() {
         <div className="home-hero__inner">
           <span className="home-hero__kicker">Récit de pèlerinage</span>
           <h1 className="home-hero__title">
-            Sur le <em>Chemin</em>
+            Des anges sur <em>mon chemin</em>
           </h1>
           <p className="home-hero__subtitle">
-            Soixante jours de marche. {Math.round(stats.totalDistance)}{" "}
+            Un printemps vers Santiago
+          </p>
+          <p className="home-hero__subtitle" style={{ fontSize: 'clamp(0.9375rem, 1.8vw, 1.125rem)', marginTop: '0.5rem' }}>
+            {stats.totalDays} jours de marche. {Math.round(stats.totalDistance)}{" "}
             kilomètres. {formatNumber(stats.totalElevationGain, null, 0)} mètres
-            de dénivelé. Une seule question : qu'est-ce qu'on laisse derrière
-            soi quand on marche vers l'essentiel ?
+            de dénivelé. Un récit sincère sur ce qu'on découvre quand on marche
+            vers l'essentiel.
           </p>
           <div className="home-ctas">
             <Link href="/livre" className="btn btn-primary">
@@ -111,7 +114,7 @@ export default function HomePage() {
             <FeatureCard
               icon="☕"
               title="Soutenir l'auteur"
-              desc="Ce livre est gratuit. Si le voyage vous a touché, un don même modeste fait une vraie différence."
+              desc="Ce livre en ligne restera gratuit. Si le récit vous a touché, votre soutien est une belle façon de dire merci."
               href="/don"
               cta="Faire un don"
             />

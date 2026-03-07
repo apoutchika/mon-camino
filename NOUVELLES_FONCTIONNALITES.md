@@ -256,13 +256,168 @@ Next.js optimise automatiquement :
 
 ---
 
+## 3. Système de likes avec compteur ❤️
+
+### Fonctionnalité
+Chaque journée dispose maintenant d'un bouton like flottant permettant aux lecteurs d'exprimer leur appréciation.
+
+### Caractéristiques
+- **Bouton flottant** : Position fixe en bas à droite
+- **Animation heartbeat** : Animation sympa au clic
+- **Compteur de likes** : Affiche le nombre total de likes
+- **1 like par IP** : Chaque visiteur peut liker une fois par jour
+- **Anonymisation IP** : Les IPs sont hashées (SHA256 + salt) pour la confidentialité
+- **Temps réel** : Le compteur s'incrémente immédiatement
+
+### Affichage
+
+#### État normal
+- Coeur vide (outline)
+- Couleur pierre (`var(--stone)`)
+- Ombre portée subtile
+- Hover : légère élévation
+
+#### État liké
+- Coeur plein
+- Couleur rouille (`var(--rust)`)
+- Background rouille
+- Texte blanc
+
+#### Animation
+- Effet heartbeat au clic (0.6s)
+- Plusieurs pulsations pour un effet vivant
+- Transition fluide entre les états
+
+### Base de données SQLite
+
+Table `likes` :
+```sql
+CREATE TABLE likes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  day_id INTEGER NOT NULL,
+  ip_hash TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(day_id, ip_hash)
+)
+```
+
+### API
+
+#### GET `/api/likes?dayId={id}`
+Récupère l'état du like et le compteur :
+```json
+{
+  "liked": true,
+  "count": 42
+}
+```
+
+#### POST `/api/likes`
+Toggle le like (ajoute ou retire) :
+```json
+{
+  "dayId": 5
+}
+```
+
+Réponse :
+```json
+{
+  "liked": true,
+  "count": 43
+}
+```
+
+### Sécurité et confidentialité
+
+#### Anonymisation IP
+- IP hashée avec SHA256
+- Salt stocké dans variable d'environnement `IP_SALT`
+- IP réelle jamais stockée en base
+- Impossible de retrouver l'IP d'origine
+
+#### Protection anti-spam
+- 1 like par IP par jour (contrainte UNIQUE en base)
+- Pas de rate limiting nécessaire (contrainte DB)
+- Pas de cookies (basé sur IP uniquement)
+
+### Variables d'environnement
+
+Ajouter dans `.env.local` :
+```bash
+IP_SALT=votre_salt_secret_aleatoire
+```
+
+Générer un salt sécurisé :
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+### Composant `DayLike`
+
+**Props** :
+- `dayId: number` - L'ID du jour (1-33)
+
+**États** :
+- `liked` : Booléen indiquant si l'utilisateur a liké
+- `count` : Nombre total de likes
+- `loading` : État de chargement initial
+- `animating` : État d'animation
+
+**Fonctionnalités** :
+- Chargement de l'état au montage
+- Toggle au clic
+- Animation heartbeat
+- Gestion des erreurs
+- Accessible (aria-label, title)
+
+### Intégration
+
+Le bouton like est affiché uniquement sur les jours (pas sur prologue/postface) :
+
+```tsx
+{isJour && day.day && <DayLike dayId={day.day} />}
+```
+
+### Responsive
+
+#### Desktop
+- Taille : 56x56px
+- Position : bottom 2rem, right 2rem
+- Icône : 24x24px
+
+#### Mobile
+- Taille : 48x48px
+- Position : bottom 1.5rem, right 1.5rem
+- Icône : 20x20px
+
+### Accessibilité
+
+- `aria-label` : "Aimer cette journée" / "Retirer le like"
+- `title` : Tooltip au survol
+- Navigation clavier (Tab, Enter)
+- Contraste suffisant (WCAG AA)
+- États visuels clairs
+
+### Performance
+
+- Requête GET au montage (une seule fois)
+- Requête POST au clic (optimiste)
+- Pas de polling
+- Base SQLite locale (rapide)
+- Index sur `day_id` et `ip_hash`
+
+---
+
 ## Résumé
 
 ✅ **Google Translate** : Site traduisible dans 100+ langues  
 ✅ **Cartes de lieu** : Départ et arrivée avec tampons  
 ✅ **Lightbox** : Agrandissement des tampons au clic  
+✅ **Système de likes** : Bouton coeur avec compteur et animation  
+✅ **Anonymisation IP** : Confidentialité respectée  
 ✅ **Accessibilité** : Clavier, lecteurs d'écran  
-✅ **Performance** : Images optimisées par Next.js  
+✅ **Performance** : Images optimisées, base SQLite rapide  
 ✅ **DDD** : Architecture propre et maintenable  
 
-Ton récit de pèlerinage est maintenant encore plus immersif et accessible ! 🎒✨
+Ton récit de pèlerinage est maintenant encore plus immersif, accessible et interactif ! 🎒✨❤️

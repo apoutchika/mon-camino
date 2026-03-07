@@ -5,8 +5,8 @@ export function SiteFooter() {
     <footer className="site-footer">
       <span>© {new Date().getFullYear()} Sur le Chemin — Tous droits réservés</span>
       <nav style={{ display: 'flex', gap: '1.5rem' }}>
-        <Link href="/telechargement" className="link-underline">Télécharger</Link>
-        <Link href="/don" className="link-underline">Soutenir</Link>
+        <Link href="/telechargement" className="footer-link">⬇️ Télécharger</Link>
+        <Link href="/don" className="footer-link">☕ Soutenir</Link>
       </nav>
     </footer>
   );

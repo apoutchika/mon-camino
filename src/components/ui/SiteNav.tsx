@@ -8,7 +8,7 @@ const links = [
   { href: "/", label: "Accueil" },
   { href: "/livre", label: "Livre interactif" },
   { href: "/telechargement", label: "Télécharger" },
-  { href: "/don", label: "Faire un don" },
+  { href: "/don", label: "☕ Soutenir" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -19,7 +19,7 @@ export function SiteNav() {
   return (
     <nav className="site-nav">
       <Link href="/" className="site-nav__brand" onClick={() => setOpen(false)}>
-        Sur&nbsp;le&nbsp;Chemin
+        Des&nbsp;anges&nbsp;sur&nbsp;mon&nbsp;chemin
       </Link>
 
       <ul className={`site-nav__links${open ? " site-nav__links--open" : ""}`}>
@@ -41,7 +41,7 @@ export function SiteNav() {
         aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
         onClick={() => setOpen((o) => !o)}
       >
-        {open ? "✕" : "☰"}
+        <span className={`nav-mobile-toggle__bar${open ? " nav-mobile-toggle__bar--open" : ""}`}></span>
       </button>
     </nav>
   );

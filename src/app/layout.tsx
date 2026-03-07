@@ -5,8 +5,8 @@ import { SiteFooter } from '@/components/ui/SiteFooter';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Sur le Chemin — Un pèlerinage en mots et en pas',
-    template: '%s — Sur le Chemin',
+    default: 'Des anges sur mon chemin — Un printemps vers Santiago',
+    template: '%s — Des anges sur mon chemin',
   },
   description:
     'Soixante jours de marche, mille deux cents kilomètres, un seul fil conducteur : ' +
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
-    siteName: 'Sur le Chemin',
+    siteName: 'Des anges sur mon chemin',
   },
 };
 
@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr" translate="yes">
+    <html lang="fr" translate="yes" data-scroll-behavior="smooth">
       <head>
         {/* Meta tag pour Google Translate */}
         <meta name="google" content="notranslate" />

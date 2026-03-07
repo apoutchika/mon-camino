@@ -116,16 +116,34 @@ export class Day {
     return `jour-${this.day}`;
   }
 
+  private getFrom(): string {
+    return this.from?.city ?? "?";
+  }
+
+  private getTo(): string {
+    if (this.day === 82) {
+      return "Lyon";
+    }
+    return this.to?.city ?? "?";
+  }
+
+  public getFromTo(): string {
+    const from = this.getFrom();
+    const to = this.getTo();
+
+    if (from === to) {
+      return from;
+    }
+
+    return `${from} → ${to}`;
+  }
+
   getTitle(): string {
     if (!this.isJour()) {
       return this.title ?? (this.isAvantPropos() ? "Avant-propos" : "Postface");
     }
 
-    if (this.from && this.to && this.from.city === this.to.city) {
-      return this.from.city;
-    }
-
-    return `${this.from?.city ?? "?"} → ${this.to?.city ?? "?"}`;
+    return this.getFromTo();
   }
 
   getLabel(): string {
@@ -133,11 +151,8 @@ export class Day {
       return this.getTitle();
     }
 
-    if (this.from && this.to && this.from.city === this.to.city) {
-      return `Jour ${this.day} — ${this.from.city}`;
-    }
-
-    return `Jour ${this.day} — ${this.from?.city ?? "?"} → ${this.to?.city ?? "?"}`;
+    const fromTo = this.getFromTo();
+    return `Jour ${this.day} — ${fromTo}`;
   }
 
   getFormattedDate(locale: string = "fr-FR"): string | null {
